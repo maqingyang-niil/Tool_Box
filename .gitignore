@@ -5,6 +5,9 @@
 __pycache__/
 *.pyc
 
+# Build output
+build/
+
 # IDE
 .idea/
 

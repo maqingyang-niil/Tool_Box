@@ -2,7 +2,6 @@ import sys
 from PyQt6.QtWidgets import QApplication
 from core.app import MainWindow
 
-
 def main():
     app=QApplication(sys.argv)
     app.setApplicationName("ToolBox")
