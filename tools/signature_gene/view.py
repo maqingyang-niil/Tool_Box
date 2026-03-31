@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QLabel, QMessageBox, QProgressBar, QSlider,
-    QFileDialog, QColorDialog
+    QLabel, QMessageBox, QProgressBar, QSlider,QFrame,
+    QFileDialog, QColorDialog,QStackedWidget
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QPixmap, QColor
@@ -131,15 +131,21 @@ class SignatureGene(QWidget):
         self.btn_preview.setEnabled(False)
         self.progress.setVisible(True)
         self.progress.setRange(0, 0)
-        self._worker = WorkerThread(
-            self.controller.process_signature,
-            self.drop.files[0],
-            self._preview_path,
-            self.threshold_slider.value(),
-            self.color_btn.get_rgb()
-        )
-        self._worker.finished.connect(self._on_preview_done)
-        self._worker.start()
+        try:
+            self._worker = WorkerThread(
+                self.controller.signature_gene,
+                self.drop.files[0],
+                self._preview_path,
+                self.threshold_slider.value(),
+                self.color_btn.get_rgb()
+            )
+            self._worker.finished.connect(self._on_preview_done)
+            self._worker.start()
+        except Exception as e:
+            import traceback
+            QMessageBox.critical(self, "错误", traceback.format_exc())
+            self.btn_preview.setEnabled(True)
+            self.progress.setVisible(False)
 
     def _on_preview_done(self, ok, msg):
         self.btn_preview.setEnabled(True)
@@ -171,12 +177,134 @@ class SignatureGene(QWidget):
         QMessageBox.information(self, "完成", f"签名已保存 → {out}")
 
 class SignatureWidget(QWidget):
+    """电子签名主界面，左侧导航 + 右侧功能页"""
+
+    STYLE = """
+        QWidget {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+            font-size: 14px;
+        }
+        #navPanel {
+            background: #181825;
+            border-right: 1px solid #313244;
+        }
+        #navTitle {
+            color: #89b4fa;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 20px 16px 8px 16px;
+        }
+        #navBtn {
+            text-align: left;
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            color: #a6adc8;
+            font-size: 14px;
+            border-radius: 6px;
+            margin: 2px 8px;
+        }
+        #navBtn:hover   { background: #313244; color: #cdd6f4; }
+        #navBtn:checked { background: #45475a; color: #89b4fa; font-weight: bold; }
+        #dropZone {
+            border: 2px dashed #45475a;
+            border-radius: 12px;
+            background: #181825;
+        }
+        #dropZone:hover { border-color: #89b4fa; }
+        #hintLabel { color: #6c7086; font-size: 13px; }
+        #fileLabel  { color: #a6e3a1; font-size: 13px; margin-top: 4px; }
+        #primaryBtn {
+            background: #89b4fa;
+            color: #1e1e2e;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        #primaryBtn:hover    { background: #b4befe; }
+        #primaryBtn:disabled { background: #45475a; color: #6c7086; }
+        #secondaryBtn {
+            background: #313244;
+            color: #cdd6f4;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+        }
+        #secondaryBtn:hover { background: #45475a; }
+        #previewLabel {
+            background: #181825;
+            border: 1px solid #313244;
+            border-radius: 8px;
+            color: #6c7086;
+        }
+        QSlider::groove:horizontal {
+            background: #313244;
+            height: 4px;
+            border-radius: 2px;
+        }
+        QSlider::handle:horizontal {
+            background: #89b4fa;
+            width: 14px;
+            height: 14px;
+            margin: -5px 0;
+            border-radius: 7px;
+        }
+        QProgressBar {
+            background: #313244;
+            border-radius: 4px;
+            height: 6px;
+        }
+        QProgressBar::chunk { background: #89b4fa; border-radius: 4px; }
+    """
+
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setStyleSheet(self.STYLE)
         self.controller = ImageController()
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        root = QHBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
 
-        layout.addWidget(SignatureGene(self.controller))
+        # ── 左侧导航 ──
+        nav = QFrame()
+        nav.setObjectName("navPanel")
+        nav.setFixedWidth(160)
+        nav_layout = QVBoxLayout(nav)
+        nav_layout.setContentsMargins(0, 0, 0, 0)
+        nav_layout.setSpacing(0)
+
+        title = QLabel("电子签名")
+        title.setObjectName("navTitle")
+        nav_layout.addWidget(title)
+
+        self.nav_buttons = []
+        pages_info = [
+            ("✍️  生成签名", SignatureGene),
+        ]
+
+        self.stack = QStackedWidget()
+        for i, (label, PageClass) in enumerate(pages_info):
+            btn = QPushButton(label)
+            btn.setObjectName("navBtn")
+            btn.setCheckable(True)
+            btn.clicked.connect(lambda _, idx=i: self._switch(idx))
+            nav_layout.addWidget(btn)
+            self.nav_buttons.append(btn)
+            self.stack.addWidget(PageClass(self.controller))
+
+        nav_layout.addStretch()
+
+        root.addWidget(nav)
+        root.addWidget(self.stack)
+
+        self._switch(0)
+
+    def _switch(self, index):
+        self.stack.setCurrentIndex(index)
+        for i, btn in enumerate(self.nav_buttons):
+            btn.setChecked(i == index)
