@@ -1,20 +1,23 @@
-"""
-PDF 操作的业务逻辑，与 UI 完全解耦。
-依赖：pypdf（合并/拆分）、reportlab（水印）
-安装：pip install pypdf reportlab
-"""
-
 import os
 import re
-from os import write
-
 from pypdf import PdfWriter, PdfReader
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-import io
+
+#处理拆分页面
+def parse_range(range_str:str,total:int)->list:
+    indices=[]
+    for part in range_str.split(","):
+        part=part.strip()
+        m=re.match(r'^(\d+)-(\d+)$', part)
+        if m:
+            start,end=int(m.group(1)),int(m.group(2))
+            indices.extend(range(start-1,min(end,total)))
+        elif re.match(r'^\d+$',part):
+            i=int(part)-1
+            if 0<=i<total:
+                indices.append(i)
+    return sorted(set(indices))
 
 class PdfController:
-
     #合并
     def merge(self,input_paths:list[str],output_path:str)->str:
         writer=PdfWriter()
@@ -45,7 +48,7 @@ class PdfController:
         reader=PdfReader(input_path)
         total=len(reader.pages)
         base=os.path.splitext(os.path.basename(input_path))[0]
-        indices=self._parse_range(page_range,total) if page_range else list(range(total))
+        indices=parse_range(page_range,total) if page_range else list(range(total))
 
         saved=0
         if page_range:#提取部分页面

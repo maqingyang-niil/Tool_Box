@@ -1,14 +1,14 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
     QLabel, QFileDialog, QListWidget, QListWidgetItem,
-    QStackedWidget, QFrame, QLineEdit, QSpinBox,
+    QStackedWidget, QFrame, QLineEdit,
     QMessageBox, QProgressBar
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
-from PyQt6.QtGui import QFont, QColor, QIcon
 from .controller import PdfController
+from core.widgets import DropZone
 
-#后台线性
+#后台线程
 class WorkerThread(QThread):
     finished=pyqtSignal(bool,str)
 
@@ -25,70 +25,7 @@ class WorkerThread(QThread):
         except Exception as e:
             self.finished.emit(False, str(e))
 
-
-# ── 通用：带虚线边框的文件拖放区 ────────────────────────────────────
-class DropZone(QFrame):
-    def __init__(self, text="点击或拖拽文件到此处", multi=False, parent=None):
-        super().__init__(parent)
-        self.multi = multi
-        self.files = []
-        self.setAcceptDrops(True)
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setObjectName("dropZone")
-
-        layout = QVBoxLayout(self)
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.icon_label = QLabel("📂")
-        self.icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.icon_label.setFont(QFont("Segoe UI Emoji", 28))
-
-        self.hint_label = QLabel(text)
-        self.hint_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.hint_label.setObjectName("hintLabel")
-
-        self.file_label = QLabel("")
-        self.file_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.file_label.setObjectName("fileLabel")
-        self.file_label.setWordWrap(True)
-
-        layout.addWidget(self.icon_label)
-        layout.addWidget(self.hint_label)
-        layout.addWidget(self.file_label)
-
-    def mousePressEvent(self, event):
-        if self.multi:
-            paths, _ = QFileDialog.getOpenFileNames(self, "选择 PDF 文件", "", "PDF Files (*.pdf)")
-        else:
-            path, _ = QFileDialog.getOpenFileName(self, "选择 PDF 文件", "", "PDF Files (*.pdf)")
-            paths = [path] if path else []
-        if paths:
-            self._set_files(paths)
-
-    def dragEnterEvent(self, event):
-        if event.mimeData().hasUrls():
-            event.acceptProposedAction()
-
-    def dropEvent(self, event):
-        paths = [u.toLocalFile() for u in event.mimeData().urls() if u.toLocalFile().endswith(".pdf")]
-        if paths:
-            self._set_files(paths if self.multi else [paths[0]])
-
-    def _set_files(self, paths):
-        self.files = paths
-        if len(paths) == 1:
-            self.file_label.setText(paths[0].split("/")[-1].split("\\")[-1])
-        else:
-            self.file_label.setText(f"已选择 {len(paths)} 个文件")
-        self.icon_label.setText("✅")
-
-    def clear(self):
-        self.files = []
-        self.icon_label.setText("📂")
-        self.file_label.setText("")
-
-
-# ── 合并 PDF 页面 ────────────────────────────────────────────────────
+#合并 PDF页面
 class MergePage(QWidget):
     def __init__(self, controller: PdfController, parent=None):
         super().__init__(parent)
@@ -96,7 +33,11 @@ class MergePage(QWidget):
         layout = QVBoxLayout(self)
         layout.setSpacing(16)
 
-        self.drop = DropZone("点击或拖拽多个 PDF 文件", multi=True)
+        self.drop = DropZone(
+            "点击或拖曳PDF文件到此处",
+            file_filter="PDF Files (*.pdf)",
+            extensions=[".pdf"]
+        )
         self.drop.setMinimumHeight(140)
 
         self.list_widget = QListWidget()
@@ -203,7 +144,11 @@ class SplitPage(QWidget):
         layout = QVBoxLayout(self)
         layout.setSpacing(16)
 
-        self.drop = DropZone("点击或拖拽一个 PDF 文件")
+        self.drop = DropZone(
+            "点击或拖曳PDF文件到此处",
+            file_filter="PDF Files (*.pdf)",
+            extensions=[".pdf"]
+        )
         self.drop.setMinimumHeight(140)
 
         range_row = QHBoxLayout()

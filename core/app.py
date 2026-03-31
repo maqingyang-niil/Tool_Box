@@ -4,13 +4,13 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt,QSize
 from PyQt6.QtGui import QFont, QIcon
-from tools import PdfEditorTool
+from tools import PdfEditorTool, SignatureTool
 from assets import icons
-# ── 注册所有工具，以后新增工具只需在这里加一行 ──
+#注册所有工具，新增工具需在这里加一行
 TOOLS = [
     PdfEditorTool(),
+    SignatureTool(),
 ]
-
 
 class MainWindow(QMainWindow):
 
@@ -70,7 +70,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Toolbox")
+        self.setWindowTitle("工具箱")
         self.setMinimumSize(860, 580)
         self.setStyleSheet(self.STYLE)
 
@@ -101,7 +101,8 @@ class MainWindow(QMainWindow):
             btn = QPushButton()
             btn.setObjectName("toolBtn")
             btn.setCheckable(True)
-            icon=QIcon("assets/icons/PDF.png")
+
+            icon=QIcon(tool.icon)
             btn.setIcon(icon)
             btn.setIconSize(QSize(32,32))
             btn.setToolTip(tool.name)
