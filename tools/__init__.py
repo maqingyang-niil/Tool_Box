@@ -2,6 +2,7 @@ from core.base_tool import BaseTool
 from tools.pdf_editor.view import PdfEditorWidget
 from tools.signature_gene.view import SignatureWidget
 from core.utils import resource_path
+
 #各工具的属性
 class PdfEditorTool(BaseTool):
     def __init__(self):

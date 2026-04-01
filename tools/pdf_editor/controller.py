@@ -1,5 +1,7 @@
 import os
 import re
+from os import write
+
 from pypdf import PdfWriter, PdfReader
 
 #处理拆分页面
@@ -69,3 +71,26 @@ class PdfController:
                 saved+=1
         return f"已拆分为{saved}个文件，保存至：{output_dir}"
 
+    #将一个PDF从某一页分成两半
+    def split22(self,input_path:str,output_dir:str,split_pt:int)->str:
+        reader=PdfReader(input_path)
+        total=len(reader.pages)
+        base=os.path.splitext(os.path.basename(input_path))[0]
+
+        if 0<split_pt<total:
+            writer1 = PdfWriter()
+            for page_num in range(split_pt):
+                writer1.add_page(reader.pages[page_num])
+
+            writer2 = PdfWriter()
+            for page_num in range(split_pt, total):
+                writer2.add_page(reader.pages[page_num])
+            out1 = os.path.join(output_dir, f"{base}_part1.pdf")
+            out2 = os.path.join(output_dir, f"{base}_part2.pdf")
+            with open(out1, "wb") as f:
+                writer1.write(f)
+            with open(out2, "wb") as f:
+                writer2.write(f)
+        else:
+            return "输入页码数出错"
+        return f"已拆分，保存至：{output_dir}"

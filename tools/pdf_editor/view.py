@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
     QMessageBox, QProgressBar
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
+
 from .controller import PdfController
 from core.widgets import DropZone
 
@@ -136,7 +137,7 @@ class MergePage(QWidget):
             QMessageBox.critical(self, "错误", msg)
 
 
-# ── 拆分 PDF 页面 ────────────────────────────────────────────────────
+#拆分PDF页面
 class SplitPage(QWidget):
     def __init__(self, controller: PdfController, parent=None):
         super().__init__(parent)
@@ -198,6 +199,74 @@ class SplitPage(QWidget):
         else:
             QMessageBox.critical(self, "错误", msg)
 
+class Split22Page(QWidget):
+    def __init__(self,controller:PdfController,parent=None):
+        super().__init__(parent)
+        self.controller=controller
+        layout=QVBoxLayout(self)
+        layout.setSpacing(16)
+
+        self.drop=DropZone(
+            "点击或拖曳PDF文件到此处",
+            file_filter="PDF Files (*.pdf)",
+            extensions=[".pdf"]
+        )
+        self.drop.setMinimumHeight(140)
+
+        range_row=QHBoxLayout()
+        range_row.addWidget(QLabel("拆分页码："))
+        self.range_input=QLineEdit()
+        self.range_input.setPlaceholderText("1~总页码数")
+        range_row.addWidget(self.range_input)
+
+        self.btn_run=QPushButton("拆分 PDF")
+        self.btn_run.setObjectName("primaryBtn")
+        self.progress=QProgressBar()
+        self.progress.setVisible(False)
+
+        layout.addWidget(QLabel("✂️  拆分 PDF"))
+        layout.addWidget(self.drop)
+        layout.addLayout(range_row)
+        layout.addWidget(self.btn_run)
+        layout.addWidget(self.progress)
+        layout.addStretch()
+
+        self.btn_run.clicked.connect(self._run)
+
+    def _run(self):
+        if not self.drop.files:
+            QMessageBox.warning(self,"提示","请选择一个PDF文件")
+            return
+        out_dir=QFileDialog.getExistingDirectory(self,"选择输出文件夹")
+        if not out_dir:
+            return
+        self.btn_run.setEnabled(False)
+        self.progress.setVisible(True)
+        self.progress.setRange(0,0)
+
+        try:
+            page_num=int(self.range_input.text().strip())
+        except ValueError:
+            QMessageBox.warning(self,"错误","请输入有效数字页码")
+            return
+        self._worker=WorkerThread(
+            self.controller.split22,
+            self.drop.files[0],
+            out_dir,
+            page_num
+        )
+
+        self._worker.finished.connect(self._on_done)
+        self._worker.start()
+
+    def _on_done(self,ok,msg):
+        self.btn_run.setEnabled(True)
+        self.progress.setVisible(False)
+        if ok:
+            QMessageBox.information(self,"完成",msg)
+        else:
+            QMessageBox.critical(self,"错误",msg)
+
 # ── 主 Widget ────────────────────────────────────────────────────────
 class PdfEditorWidget(QWidget):
     """PDF 编辑器主界面，左侧导航 + 右侧功能页"""
@@ -207,7 +276,8 @@ class PdfEditorWidget(QWidget):
             background: #1e1e2e;
             color: #cdd6f4;
             font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
-            font-size: 14px;
+            font-size: 
+            14px;
         }
         /* 左侧导航 */
         #navPanel {
@@ -312,6 +382,7 @@ class PdfEditorWidget(QWidget):
         pages_info = [
             ("📎  合并", MergePage),
             ("✂️  拆分", SplitPage),
+            ("✂️  剪开", Split22Page),
         ]
 
         self.stack = QStackedWidget()

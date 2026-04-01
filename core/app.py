@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt,QSize
 from PyQt6.QtGui import QFont, QIcon
 from tools import PdfEditorTool, SignatureTool
-from assets import icons
+
 #注册所有工具，新增工具需在这里加一行
 TOOLS = [
     PdfEditorTool(),
