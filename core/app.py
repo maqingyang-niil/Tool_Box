@@ -2,14 +2,15 @@ from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QPushButton, QLabel, QStackedWidget, QFrame
 )
-from PyQt6.QtCore import Qt,QSize
+from PyQt6.QtCore import QSize
 from PyQt6.QtGui import QFont, QIcon
-from tools import PdfEditorTool, SignatureTool
+from tools import PdfEditorTool, SignatureTool,ControlTool
 
 #注册所有工具，新增工具需在这里加一行
 TOOLS = [
     PdfEditorTool(),
     SignatureTool(),
+    ControlTool(),
 ]
 
 class MainWindow(QMainWindow):

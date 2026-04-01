@@ -1,7 +1,5 @@
 import os
 import re
-from os import write
-
 from pypdf import PdfWriter, PdfReader
 
 #处理拆分页面
