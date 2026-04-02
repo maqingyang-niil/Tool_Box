@@ -3,9 +3,6 @@ import matplotlib.pyplot as plt
 import matplotlib
 import tempfile, os
 import numpy as np
-import io
-
-from scipy.stats import alpha
 
 matplotlib.use('Agg')
 
@@ -41,12 +38,12 @@ class ControlController:
         return path
     #计算根轨迹
     def root_locus(self,num:list,den:list)->str:
-        K_values=np.linspace(0,300,3000)
+        k_values=np.linspace(0,300,3000)
 
         num_padded=np.zeros_like(den,dtype=float)
         num_padded[-len(num):]=num
         all_roots=[]
-        for k in K_values:
+        for k in k_values:
             cl_den=den+k*num_padded
             all_roots.append(np.roots(cl_den))
         all_roots=np.array(all_roots)

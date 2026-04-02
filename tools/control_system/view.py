@@ -1,5 +1,3 @@
-from cProfile import label
-
 from PyQt6.QtWidgets import (
     QWidget,QHBoxLayout, QPushButton,
     QLineEdit,
@@ -84,9 +82,9 @@ class GetPoles(QWidget):
             dialog = QDialog(self)
             dialog.setWindowTitle("根分布图")
             layout = QVBoxLayout(dialog)
-            label = QLabel()
-            label.setPixmap(QPixmap(msg))
-            layout.addWidget(label)
+            _label = QLabel()
+            _label.setPixmap(QPixmap(msg))
+            layout.addWidget(_label)
             dialog.exec()
         else:
             QMessageBox.critical(self,"错误",msg)
@@ -148,9 +146,9 @@ class RootLocus(QWidget):
             dialog = QDialog(self)
             dialog.setWindowTitle("根轨迹图")
             layout = QVBoxLayout(dialog)
-            label = QLabel()
-            label.setPixmap(QPixmap(msg))
-            layout.addWidget(label)
+            _label = QLabel()
+            _label.setPixmap(QPixmap(msg))
+            layout.addWidget(_label)
             dialog.exec()
         else:
             QMessageBox.critical(self, "错误", msg)
