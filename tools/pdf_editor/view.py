@@ -390,7 +390,7 @@ class PdfEditorWidget(QWidget):
             btn = QPushButton(label)
             btn.setObjectName("navBtn")
             btn.setCheckable(True)
-            btn.clicked.connect(lambda _, idx=i: self._switch(idx))
+            btn.clicked[bool].connect(lambda _, idx=i: self._switch(idx))
             nav_layout.addWidget(btn)
             self.nav_buttons.append(btn)
             self.stack.addWidget(PageClass(self.controller))

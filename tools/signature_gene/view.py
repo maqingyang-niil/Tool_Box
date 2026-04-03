@@ -21,9 +21,9 @@ class WorkerThread(QThread):
     def run(self):
         try:
             msg=self._fn(*self._args, **self._kwargs)
-            self.finished.emit(True,msg)
+            self.finished[bool,str].emit(True,msg)
         except Exception as e:
-            self.finished.emit(False, str(e))
+            self.finished[bool,str].emit(False, str(e))
 
 class ColorButton(QPushButton):
     def __init__(self, color: QColor = QColor(0, 0, 0), parent=None):
@@ -63,7 +63,7 @@ class SignatureGene(QWidget):
         layout.setContentsMargins(20, 20, 20, 20)
 
         self.drop = DropZone(
-            "点击或拖拽图片文件",
+            "点击或拖拽图片文件(路径不要包含中文)",
             file_filter="Image Files (*.png *.jpg *.jpeg *.bmp)",
             extensions=[".png", ".jpg", ".jpeg", ".bmp"]
         )
