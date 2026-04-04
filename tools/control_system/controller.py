@@ -6,7 +6,6 @@ import numpy as np
 matplotlib.rcParams['font.family'] = ['Microsoft YaHei']  # 微软雅黑
 matplotlib.rcParams['axes.unicode_minus'] = False          # 负号正常显示
 
-
 matplotlib.use('Agg')
 
 class ControlController:
@@ -27,9 +26,9 @@ class ControlController:
                 fontsize=9,
                 color='red'
             )
-        ax.set_xlabel('real axis')
-        ax.set_ylabel('imaginary axis')
-        ax.set_title('root distribution')
+        ax.set_xlabel('实轴')
+        ax.set_ylabel('虚轴')
+        ax.set_title('特征根分布')
         ax.grid(True, linestyle=':', alpha=0.6)
         ax.set_aspect('equal')
         plt.tight_layout()
@@ -109,6 +108,21 @@ class ControlController:
         plt.grid(True)
 
         path=os.path.join(tempfile.gettempdir(),"_nyquist_plot.png")
+        plt.savefig(path,dpi=100)
+        plt.close()
+        return path
+
+    def step_response(self,num:list,den:list)->str:
+        tf=signal.TransferFunction(num,den)
+        t, y = signal.step(tf)
+
+        plt.plot(t, y)
+        plt.xlabel('时间 (s)')
+        plt.ylabel('输出')
+        plt.title('单位阶跃响应')
+        plt.grid(True)
+
+        path=os.path.join(tempfile.gettempdir(),"_step_response_plot")
         plt.savefig(path,dpi=100)
         plt.close()
         return path
