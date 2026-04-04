@@ -91,3 +91,24 @@ class ControlController:
         plt.close(fig)
         return path
 
+    def nyquist_graph(self,num:list,den:list)->str:
+        tf=signal.TransferFunction(num,den)
+        w=np.logspace(-3,6,100000)
+        w,H=signal.freqresp(tf,w)
+
+        plt.figure(figsize=(8, 8))
+        plt.plot(H.real, H.imag, 'b', label='ω: 0 → +∞')
+        plt.plot(H.real, -H.imag, 'b--', label='ω: 0 → -∞')
+        plt.plot(-1, 0, 'r+', markersize=12, markeredgewidth=2, label='(-1, 0)')
+
+        plt.xlabel('实轴')
+        plt.ylabel('虚轴')
+        plt.title('奈奎斯特图')
+        plt.axhline(0, color='k', linewidth=0.5)
+        plt.axvline(0, color='k', linewidth=0.5)
+        plt.grid(True)
+
+        path=os.path.join(tempfile.gettempdir(),"_nyquist_plot.png")
+        plt.savefig(path,dpi=100)
+        plt.close()
+        return path
