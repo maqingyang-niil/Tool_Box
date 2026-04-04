@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import QThread, pyqtSignal
 from .controller import ControlController
 from PyQt6.QtWidgets import QDialog, QLabel, QVBoxLayout
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap,QPixmapCache
 class WorkerThread(QThread):
     finished = pyqtSignal(bool,str)
 
@@ -79,6 +79,7 @@ class GetPoles(QWidget):
         self.btn_run.setEnabled(True)
         self.progress.setVisible(False)
         if ok:
+            QPixmapCache.clear()
             dialog = QDialog(self)
             dialog.setWindowTitle("根分布图")
             layout = QVBoxLayout(dialog)
@@ -143,6 +144,7 @@ class RootLocus(QWidget):
         self.btn_run.setEnabled(True)
         self.progress.setVisible(False)
         if ok:
+            QPixmapCache.clear()
             dialog = QDialog(self)
             dialog.setWindowTitle("根轨迹图")
             layout = QVBoxLayout(dialog)
@@ -207,6 +209,7 @@ class BodeGraph(QWidget):
         self.btn_run.setEnabled(True)
         self.progress.setVisible(False)
         if ok:
+            QPixmapCache.clear()
             dialog = QDialog(self)
             dialog.setWindowTitle("伯德图")
             layout = QVBoxLayout(dialog)
@@ -271,6 +274,7 @@ class NyquistGraph(QWidget):
         self.btn_run.setEnabled(True)
         self.progress.setVisible(False)
         if ok:
+            QPixmapCache.clear()
             dialog = QDialog(self)
             dialog.setWindowTitle("奈奎斯特图")
             layout = QVBoxLayout(dialog)
@@ -335,6 +339,7 @@ class StepResponse(QWidget):
         self.btn_run.setEnabled(True)
         self.progress.setVisible(False)
         if ok:
+            QPixmapCache.clear()
             dialog = QDialog(self)
             dialog.setWindowTitle("单位阶跃响应图")
             layout = QVBoxLayout(dialog)
