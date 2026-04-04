@@ -8,6 +8,29 @@ matplotlib.rcParams['axes.unicode_minus'] = False          # 负号正常显示
 
 matplotlib.use('Agg')
 
+def steady_or_not(den:list)->bool:
+    # 判断系统是否稳定
+    n = len(den)
+    rows = (n + 1) // 2
+    table = np.zeros((n, rows))
+    table[0, :len(den[0::2])] = den[0::2]
+    table[1, :len(den[1::2])] = den[1::2]
+
+    for i in range(2, n):
+        for j in range(rows - 1):
+            pivot = table[i - 1, 0]
+            if pivot == 0:
+                pivot = 1e-10
+                table[i - 1, 0] = pivot
+            table[i, j] = (pivot * table[i - 2, j + 1] - table[i - 2, 0] * table[i - 1, j + 1]) / pivot
+
+    first_col = table[:, 0]
+    sign_changes = sum(
+        1 for i in range(1, len(first_col))
+        if first_col[i] * first_col[i - 1] < 0
+    )
+    return sign_changes==0
+
 class ControlController:
     #计算闭环根
     def get_polar(self,num:list,den:list)->str:
@@ -112,9 +135,16 @@ class ControlController:
         plt.close()
         return path
 
-    def step_response(self,num:list,den:list)->str:
-        tf=signal.TransferFunction(num,den)
-        t, y = signal.step(tf)
+    def step_response(self,
+                      num:list,
+                      den:list,
+                      t_final:int,
+                      err_bound:float
+                      )->tuple[str,float,float,float,float,bool]:
+        steady = steady_or_not(den)
+        tf = signal.TransferFunction(num, den)
+        t = np.linspace(0, t_final, 800 * t_final)
+        t, y = signal.step(tf, T=t)
 
         plt.plot(t, y)
         plt.xlabel('时间 (s)')
@@ -122,7 +152,57 @@ class ControlController:
         plt.title('单位阶跃响应')
         plt.grid(True)
 
-        path=os.path.join(tempfile.gettempdir(),"_step_response_plot")
-        plt.savefig(path,dpi=100)
+        path = os.path.join(tempfile.gettempdir(), "_step_response_plot.png")
+        plt.savefig(path, dpi=100)
         plt.close()
-        return path
+
+        if not steady:
+            return path,0,0,0,0,steady
+        else:
+            threshold = err_bound
+            if threshold <= 0 or threshold >= 1:
+                raise ValueError(f"误差范围必须在0到1之间，当前输入：{err_bound}")
+
+            steady_state = num[-1] / den[-1]
+            peak = np.max(y)
+            if peak > steady_state:  # 欠阻尼系统
+                overshoot = (peak - steady_state) / steady_state * 100
+                peak_time = t[np.argmax(y)]
+
+                t_100 = t[np.where(y >= steady_state)[0][0]]
+                rise_time = t_100
+            else:  # 过阻尼系统
+                overshoot = 0
+                peak_time = 0
+                t_10 = t[np.where(y >= 0.1 * steady_state)[0][0]]
+                t_90 = t[np.where(y >= 0.9 * steady_state)[0][0]]
+                rise_time = t_90 - t_10
+
+            outside = np.where(np.abs(y - steady_state) > threshold * np.abs(steady_state))[0]
+            if len(outside) == 0:
+                settling_time = 0.0
+            else:
+                settling_time = float(t[outside[-1]])
+            return path, settling_time, overshoot, peak_time, rise_time, steady
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

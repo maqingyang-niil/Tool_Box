@@ -4,11 +4,12 @@ from PyQt6.QtWidgets import (
     QMessageBox, QProgressBar,QFrame,QStackedWidget
 )
 from PyQt6.QtCore import QThread, pyqtSignal
+
 from .controller import ControlController
 from PyQt6.QtWidgets import QDialog, QLabel, QVBoxLayout
 from PyQt6.QtGui import QPixmap,QPixmapCache
 class WorkerThread(QThread):
-    finished = pyqtSignal(bool,str)
+    finished = pyqtSignal(bool,object)
 
     def __init__(self,fn,*args,**kwargs):
         super().__init__()
@@ -19,7 +20,7 @@ class WorkerThread(QThread):
     def run(self):
         try:
             msg=self._fn(*self._args,**self._kwargs)
-            self.finished.emit(True,msg or "操作成功")
+            self.finished.emit(True,msg)
         except Exception as e:
             self.finished.emit(False,str(e))
 
@@ -107,6 +108,8 @@ class RootLocus(QWidget):
         self.den_input=QLineEdit()
         den_row.addWidget(self.den_input)
 
+
+
         self.btn_run=QPushButton("生成根轨迹图")
         self.btn_run.setObjectName("primaryBtn")
         self.progress=QProgressBar()
@@ -123,6 +126,7 @@ class RootLocus(QWidget):
     def _run(self):
         num_input=self.num_input.text()
         den_input=self.den_input.text()
+
         try:
             num_list=[float(x) for x in num_input.split()]
             den_list=[float(x) for x in den_input.split()]
@@ -302,6 +306,18 @@ class StepResponse(QWidget):
         self.den_input = QLineEdit()
         den_row.addWidget(self.den_input)
 
+        t_row = QHBoxLayout()
+        t_row.addWidget(QLabel("输入仿真时间："))
+        self.t_input = QLineEdit()
+        self.t_input.setPlaceholderText("默认 10s")
+        t_row.addWidget(self.t_input)
+
+        err_row = QHBoxLayout()
+        err_row.addWidget(QLabel("输入误差度："))
+        self.err_input = QLineEdit()
+        self.err_input.setPlaceholderText("默认 0.05")
+        err_row.addWidget(self.err_input)
+
         self.btn_run = QPushButton("生成单位阶跃响应图")
         self.btn_run.setObjectName("primaryBtn")
         self.progress = QProgressBar()
@@ -310,6 +326,8 @@ class StepResponse(QWidget):
         layout.addWidget(QLabel("绘制单位阶跃响应图"))
         layout.addLayout(num_row)
         layout.addLayout(den_row)
+        layout.addLayout(t_row)
+        layout.addLayout(err_row)
         layout.addWidget(self.btn_run)
         layout.addWidget(self.progress)
         layout.addStretch()
@@ -318,9 +336,13 @@ class StepResponse(QWidget):
     def _run(self):
         num_input = self.num_input.text()
         den_input = self.den_input.text()
+        t_text = self.t_input.text().strip()
+        err_text = self.err_input.text().strip()
         try:
             num_list = [float(x) for x in num_input.split()]
             den_list = [float(x) for x in den_input.split()]
+            t_final = int(round(float(t_text))) if t_text else 10
+            err_bound = float(err_text) if err_text else 0.05
         except ValueError:
             QMessageBox.warning(self, "错误", "请输入有效数字")
             return
@@ -330,7 +352,9 @@ class StepResponse(QWidget):
         self._worker = WorkerThread(
             self.controller.step_response,
             num_list,
-            den_list
+            den_list,
+            t_final,
+            err_bound
         )
         self._worker.finished.connect(self._on_done)
         self._worker.start()
@@ -339,13 +363,32 @@ class StepResponse(QWidget):
         self.btn_run.setEnabled(True)
         self.progress.setVisible(False)
         if ok:
+            path,settling_time,overshoot,peak_time,rise_time,steady=msg
             QPixmapCache.clear()
-            dialog = QDialog(self)
-            dialog.setWindowTitle("单位阶跃响应图")
-            layout = QVBoxLayout(dialog)
-            _label = QLabel()
-            _label.setPixmap(QPixmap(msg))
-            layout.addWidget(_label)
+            dialog=QDialog(self)
+            dialog.setWindowTitle("单位阶跃响应")
+            layout=QVBoxLayout(dialog)
+            label=QLabel()
+            label.setPixmap(QPixmap(path))
+
+            layout.addWidget(label)
+            if not steady:
+                layout.addWidget(QLabel(f"系统不稳定"))
+            else:
+                layout.addWidget(QLabel(f"系统稳定"))
+                layout.addWidget(QLabel(f"调节时间：{settling_time:.3f} s"))
+                layout.addWidget(QLabel(f"超调量：{overshoot:.3f} %"))
+                layout.addWidget(QLabel(f"峰值时间：{peak_time:.3f} s"))
+                layout.addWidget(QLabel(f"上升时间：{rise_time:.3f} s"))
+
+
+            warning_label = QLabel("⚠️ 请自行判断系统是否已收敛，若曲线未稳定请增大仿真时间")
+            warning_label.setStyleSheet("color: orange; font-size: 12px;")
+            layout.addWidget(warning_label)
+            warning_label = QLabel("⚠️ 如果系统未收敛，计算出的性能指标不准确")
+            warning_label.setStyleSheet("color: orange; font-size: 12px;")
+            layout.addWidget(warning_label)
+
             dialog.exec()
         else:
             QMessageBox.critical(self, "错误", msg)

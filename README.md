@@ -107,6 +107,6 @@ python -m nuitka --standalone --onefile --windows-disable-console --enable-plugi
 
 ### 控制系统分析
 - 输入传递函数的**分子系数**和**分母系数**，系数之间用空格分隔
-- 例如传递函数 $\dfrac{s+1}{s^2+2s+1}$ 输入：
+- 例如开环传递函数 $\dfrac{s+1}{s^2+2s+1}$ 输入：
   - 分子：`1 1`
   - 分母：`1 2 1`
