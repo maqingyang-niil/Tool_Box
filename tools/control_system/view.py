@@ -153,6 +153,70 @@ class RootLocus(QWidget):
         else:
             QMessageBox.critical(self, "错误", msg)
 
+class BodeGraph(QWidget):
+    def __init__(self,controller:ControlController,parent=None):
+        super().__init__(parent)
+        self.controller=controller
+        layout = QVBoxLayout(self)
+        layout.setSpacing(16)
+
+        num_row = QHBoxLayout()
+        num_row.addWidget(QLabel("输入分子系数："))
+        self.num_input = QLineEdit()
+        num_row.addWidget(self.num_input)
+
+        den_row = QHBoxLayout()
+        den_row.addWidget(QLabel("输入分母系数："))
+        self.den_input = QLineEdit()
+        den_row.addWidget(self.den_input)
+
+        self.btn_run = QPushButton("生成伯德图")
+        self.btn_run.setObjectName("primaryBtn")
+        self.progress = QProgressBar()
+        self.progress.setVisible(False)
+
+        layout.addWidget(QLabel("绘制伯德图"))
+        layout.addLayout(num_row)
+        layout.addLayout(den_row)
+        layout.addWidget(self.btn_run)
+        layout.addWidget(self.progress)
+        layout.addStretch()
+        self.btn_run.clicked.connect(self._run)
+
+    def _run(self):
+        num_input = self.num_input.text()
+        den_input = self.den_input.text()
+        try:
+            num_list = [float(x) for x in num_input.split()]
+            den_list = [float(x) for x in den_input.split()]
+        except ValueError:
+            QMessageBox.warning(self, "错误", "请输入有效数字")
+            return
+        self.btn_run.setEnabled(False)
+        self.progress.setVisible(True)
+        self.progress.setRange(0, 0)
+        self._worker = WorkerThread(
+            self.controller.bode_graph,
+            num_list,
+            den_list
+        )
+        self._worker.finished.connect(self._on_done)
+        self._worker.start()
+
+    def _on_done(self,ok,msg):
+        self.btn_run.setEnabled(True)
+        self.progress.setVisible(False)
+        if ok:
+            dialog = QDialog(self)
+            dialog.setWindowTitle("伯德图")
+            layout = QVBoxLayout(dialog)
+            _label = QLabel()
+            _label.setPixmap(QPixmap(msg))
+            layout.addWidget(_label)
+            dialog.exec()
+        else:
+            QMessageBox.critical(self, "错误", msg)
+
 class ControlWidget(QWidget):
     """控制系统工具主界面，左侧导航 + 右侧功能页"""
 
@@ -245,6 +309,7 @@ class ControlWidget(QWidget):
         pages_info = [
             ("📍  特征根", GetPoles),
             ("📍  根轨迹", RootLocus),
+            ("📍  伯德图", BodeGraph),
             # 以后在这里加新功能
         ]
 

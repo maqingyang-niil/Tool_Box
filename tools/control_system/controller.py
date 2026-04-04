@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 import matplotlib
 import tempfile, os
 import numpy as np
+matplotlib.rcParams['font.family'] = ['Microsoft YaHei']  # 微软雅黑
+matplotlib.rcParams['axes.unicode_minus'] = False          # 负号正常显示
+
 
 matplotlib.use('Agg')
 
@@ -64,3 +67,27 @@ class ControlController:
         plt.savefig(path, dpi=100)
         plt.close()
         return path
+
+    def bode_graph(self,num:list,den:list)->str:
+        tf=signal.TransferFunction(num,den)
+        w=np.logspace(-2,5,10000)
+        w,mag,phase=signal.bode(tf,w=w)
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6))
+
+        ax1.semilogx(w, mag)
+        ax1.set_ylabel('幅值 (dB)')
+        ax1.set_title('伯德图')
+        ax1.grid(True, which='both')
+
+        ax2.semilogx(w, phase)
+        ax2.set_ylabel('相位 (°)')
+        ax2.set_xlabel('频率 (rad/s)')
+        ax2.grid(True, which='both')
+
+        plt.tight_layout()
+
+        path = os.path.join(tempfile.gettempdir(), "_bode_plot.png")
+        fig.savefig(path, dpi=150)
+        plt.close(fig)
+        return path
+
