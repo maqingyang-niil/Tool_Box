@@ -4,13 +4,14 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import QSize
 from PyQt6.QtGui import QFont, QIcon
-from tools import PdfEditorTool, SignatureTool,ControlTool
+from tools import PdfEditorTool, SignatureTool, ControlTool, MatrixTool
 
 #注册所有工具，新增工具需在这里加一行
 TOOLS = [
     PdfEditorTool(),
     SignatureTool(),
     ControlTool(),
+    MatrixTool(),
 ]
 
 class MainWindow(QMainWindow):

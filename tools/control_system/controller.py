@@ -56,7 +56,6 @@ class ControlController:
         ax.set_aspect('equal')
         plt.tight_layout()
 
-
         path = os.path.join(tempfile.gettempdir(), "_poles_plot.png")
         fig.savefig(path, dpi=150)
         plt.close(fig)
@@ -184,25 +183,3 @@ class ControlController:
             else:
                 settling_time = float(t[outside[-1]])
             return path, settling_time, overshoot, peak_time, rise_time, steady
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

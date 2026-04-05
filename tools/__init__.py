@@ -34,3 +34,13 @@ class ControlTool(BaseTool):
 
     def get_widget(self,parent):
         return ControlWidget(parent)
+
+class MatrixTool(BaseTool):
+    def __init__(self):
+        super().__init__()
+        self.name="矩阵计算器"
+        self.icon=resource_path("assets/icons/MATRIX.png")
+        self.description="矩阵计算"
+
+    def get_widget(self,parent):
+        return MatrixWidegt(parent)

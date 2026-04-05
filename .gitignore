@@ -7,7 +7,7 @@ __pycache__/
 
 # Build output
 build/
-
+*.SPEC
 dist/
 
 # IDE

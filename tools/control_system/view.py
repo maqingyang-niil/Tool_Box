@@ -309,13 +309,13 @@ class StepResponse(QWidget):
         t_row = QHBoxLayout()
         t_row.addWidget(QLabel("输入仿真时间："))
         self.t_input = QLineEdit()
-        self.t_input.setPlaceholderText("默认 10s")
+        self.t_input.setPlaceholderText("默认 30s")
         t_row.addWidget(self.t_input)
 
         err_row = QHBoxLayout()
-        err_row.addWidget(QLabel("输入误差度："))
+        err_row.addWidget(QLabel("输入误差区间："))
         self.err_input = QLineEdit()
-        self.err_input.setPlaceholderText("默认 0.05")
+        self.err_input.setPlaceholderText("默认 5%")
         err_row.addWidget(self.err_input)
 
         self.btn_run = QPushButton("生成单位阶跃响应图")
@@ -341,7 +341,7 @@ class StepResponse(QWidget):
         try:
             num_list = [float(x) for x in num_input.split()]
             den_list = [float(x) for x in den_input.split()]
-            t_final = int(round(float(t_text))) if t_text else 10
+            t_final = int(round(float(t_text))) if t_text else 30
             err_bound = float(err_text) if err_text else 0.05
         except ValueError:
             QMessageBox.warning(self, "错误", "请输入有效数字")
@@ -380,7 +380,6 @@ class StepResponse(QWidget):
                 layout.addWidget(QLabel(f"超调量：{overshoot:.3f} %"))
                 layout.addWidget(QLabel(f"峰值时间：{peak_time:.3f} s"))
                 layout.addWidget(QLabel(f"上升时间：{rise_time:.3f} s"))
-
 
             warning_label = QLabel("⚠️ 请自行判断系统是否已收敛，若曲线未稳定请增大仿真时间")
             warning_label.setStyleSheet("color: orange; font-size: 12px;")
