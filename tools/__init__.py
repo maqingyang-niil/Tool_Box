@@ -2,6 +2,7 @@ from core.base_tool import BaseTool
 from tools.pdf_editor.view import PdfEditorWidget
 from tools.signature_gene.view import SignatureWidget
 from tools.control_system.view import ControlWidget
+from tools.matrix_calculator.view import MatrixWidget
 from core.utils import resource_path
 
 #各工具的属性
@@ -43,4 +44,4 @@ class MatrixTool(BaseTool):
         self.description="矩阵计算"
 
     def get_widget(self,parent):
-        return MatrixWidegt(parent)
+        return MatrixWidget(parent)

@@ -3,8 +3,19 @@ import matplotlib.pyplot as plt
 import matplotlib
 import tempfile, os
 import numpy as np
-matplotlib.rcParams['font.family'] = ['Microsoft YaHei']  # 微软雅黑
-matplotlib.rcParams['axes.unicode_minus'] = False          # 负号正常显示
+import platform
+
+def set_chinese_font():
+    system = platform.system()
+    if system == "Windows":
+        matplotlib.rcParams['font.family'] = ['Microsoft YaHei']
+    elif system == "Darwin":  # macOS
+        matplotlib.rcParams['font.family'] = ['PingFang SC', 'Heiti SC']
+    else:  # Linux / Ubuntu
+        matplotlib.rcParams['font.family'] = ['WenQuanYi Micro Hei', 'Noto Sans CJK SC', 'DejaVu Sans']
+    matplotlib.rcParams['axes.unicode_minus'] = False
+
+set_chinese_font()
 
 matplotlib.use('Agg')
 
