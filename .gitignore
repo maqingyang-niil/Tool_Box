@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 build/
 *.SPEC
+*.so
 dist/
 .vscode/
 .idea/
